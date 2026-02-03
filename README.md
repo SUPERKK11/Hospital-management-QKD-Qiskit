@@ -63,11 +63,10 @@ npm run dev
 You don't need to install Python or Node.js to run this app. You can pull the pre-built images directly from Docker Hub.
 
 1.  **Create a file named `docker-compose.yml`** and paste this content:
-    ```bash
-version: '3.8'
-
-services:
-  backend:
+    ```yaml
+    version: '3.8'
+    services:
+    backend:
     # ✅ ADD THIS LINE (Replace YOUR_DOCKER_ID):
     image: superkk11/quantum-backend:latest
     build: ./backend
@@ -75,8 +74,7 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
-
-  frontend:
+    frontend:
     # ✅ ADD THIS LINE (Replace YOUR_DOCKER_ID):
     image: superkk11/quantum-frontend:latest
     build:
