@@ -63,7 +63,7 @@ npm run dev
 You don't need to install Python or Node.js to run this app. You can pull the pre-built images directly from Docker Hub.
 
 1.  **Create a file named `docker-compose.yml`** and paste this content:
-    ```yaml
+    ```bash
 version: '3.8'
 
 services:
