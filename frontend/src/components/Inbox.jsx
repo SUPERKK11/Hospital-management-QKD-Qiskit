@@ -35,84 +35,91 @@ const Inbox = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // 1. Call Backend to Decrypt & Accept
-      await axios.post(`${API_BASE_URL}/api/transfer/accept`, 
-        { inbox_id: id }, 
+      const res = await axios.post(`${API_BASE_URL}/api/transfer/accept`, 
+        { inbox_id: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 2. Remove from UI immediately
-      setIncomingRecords(prev => prev.filter(r => (r._id || r.id) !== id));
-      
-      alert("✅ Accepted! Record decrypted and moved to your History.");
-      window.location.reload(); // Refresh to show in main list
+      // ✅ NEW: Show the Decrypted Data Popup
+      if (res.data.decrypted_data) {
+        alert(
+          `🔓 QUANTUM DECRYPTION SUCCESSFUL!\n\n` +
+          `Diagnosis: ${res.data.decrypted_data.diagnosis}\n` +
+          `Prescription: ${res.data.decrypted_data.prescription}`
+        );
+      } else {
+        alert("Record Accepted! Check your main dashboard.");
+      }
+
+      // Refresh Inbox
+      fetchInbox();
 
     } catch (err) {
-      alert("❌ Failed to accept. Check console.");
-      console.error(err);
+      console.error("Accept Error:", err);
+      alert("Failed to accept transfer.");
     } finally {
       setProcessingId(null);
     }
   };
 
-  return (
-    <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="bg-indigo-50 p-4 border-b border-indigo-100 flex justify-between items-center">
-        <h3 className="text-indigo-900 font-bold flex items-center gap-2">
-          <ArrowDownCircle size={20} className="text-indigo-600"/> 
-          Incoming Transfers
-          {incomingRecords.length > 0 && (
-            <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full shadow-sm animate-pulse">
-              {incomingRecords.length} New
-            </span>
-          )}
-        </h3>
-        <button onClick={fetchInbox} className="text-xs bg-white border border-indigo-200 text-indigo-700 px-3 py-1 rounded hover:bg-indigo-100 transition shadow-sm">
-          Refresh
-        </button>
-      </div>
+  if (loading && incomingRecords.length === 0) {
+    return <div className="p-4 text-center text-gray-500 animate-pulse">Scanning Quantum Channel...</div>;
+  }
 
-      <div className="divide-y divide-gray-50 overflow-y-auto max-h-[400px]">
-        {incomingRecords.length === 0 ? (
-          <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400">
-            <CheckCircle size={32} className="mb-2 opacity-20" />
-            <p className="text-sm italic">Inbox is empty.</p>
-          </div>
-        ) : (
-          incomingRecords.map((rec) => {
-            const recId = rec._id || rec.id;
-            return (
-              <div key={recId} className="p-4 hover:bg-gray-50 transition-colors group">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">
-                      🔒 ENCRYPTED
-                    </span>
-                    <h4 className="font-bold text-gray-800 text-sm mt-1">HIDDEN CONTENT</h4>
-                  </div>
-                  
-                  {/* THE ACCEPT BUTTON */}
-                  <button 
-                    onClick={() => handleAccept(recId)}
-                    disabled={processingId === recId}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-70"
-                  >
-                    {processingId === recId ? <Loader size={12} className="animate-spin"/> : <Download size={14} />}
-                    Accept
-                  </button>
+  if (incomingRecords.length === 0) {
+    return (
+      <div className="bg-white p-6 rounded-xl border border-dashed border-gray-300 text-center">
+        <ArrowDownCircle className="mx-auto text-gray-300 mb-2" size={32} />
+        <p className="text-gray-500 text-sm">No incoming transfers.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <ArrowDownCircle className="text-indigo-600" size={20} />
+        Incoming Transfers
+        <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
+          {incomingRecords.length}
+        </span>
+      </h3>
+
+      <div className="space-y-3">
+        {incomingRecords.map((rec) => {
+          const recId = rec._id || rec.id;
+          return (
+            <div key={recId} className="border border-indigo-100 rounded-lg p-4 hover:shadow-md transition-all bg-indigo-50/30">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">
+                    🔒 ENCRYPTED
+                  </span>
+                  <h4 className="font-bold text-gray-800 text-sm mt-1">HIDDEN CONTENT</h4>
                 </div>
-                <div className="bg-gray-50 p-2 rounded border border-gray-100 mb-2">
-                   <p className="text-xs text-gray-500 line-clamp-2 break-all font-mono">
-                     {rec.prescription || "QKD Encrypted Data..."}
-                   </p>
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  From: <span className="font-bold text-indigo-600">{rec.sender || rec.hospital || "Unknown"}</span>
-                </div>
+                
+                <button 
+                  onClick={() => handleAccept(recId)}
+                  disabled={processingId === recId}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded shadow-sm flex items-center gap-2 transition-all disabled:opacity-70"
+                >
+                  {processingId === recId ? <Loader size={12} className="animate-spin"/> : <Download size={14} />}
+                  Accept
+                </button>
               </div>
-            );
-          })
-        )}
+              
+              <div className="bg-gray-50 p-2 rounded border border-gray-100 mb-2">
+                 <p className="text-xs text-gray-500 line-clamp-2 break-all font-mono">
+                   {rec.prescription || "QKD Encrypted Data..."}
+                 </p>
+              </div>
+              
+              <div className="text-[11px] text-gray-500">
+                From: <span className="font-bold text-indigo-600">{rec.sender || rec.hospital || "Unknown"}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
