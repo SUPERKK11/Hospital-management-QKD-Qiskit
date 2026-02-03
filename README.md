@@ -42,13 +42,13 @@ cd hospital-management-qkd
 Prerequisite: Install Anaconda or Miniconda.
 cd backend
 # Create the environment
-conda create --name hospital-sys python=3.9
+conda create --name qkd_env python=3.10 -y 
 # Activate it
-conda activate hospital-sys
+conda activate qkd_env
 # Install dependencies
 pip install fastapi uvicorn pymongo python-dotenv pydantic bcrypt pyjwt cryptography
 # Run the Server
-python -m uvicorn app.main:app --reload
+uvicorn app.main:app --reload
 ```
 ### 3. Frontend Setup (React)
 ```bash
@@ -64,21 +64,29 @@ You don't need to install Python or Node.js to run this app. You can pull the pr
 
 1.  **Create a file named `docker-compose.yml`** and paste this content:
     ```yaml
-    version: '3.8'
-    services:
-      backend:
-        image: superkk11/hospital-backend:v1
-        ports:
-          - "8000:8000"
-        environment:
-          # Replace with your actual MongoDB URL
-          - MONGODB_URL=mongodb+srv://your_user:your_pass@cluster.mongodb.net/hospital_db
-      frontend:
-        image: superkk11/hospital-frontend:v1
-        ports:
-          - "5173:80"
-        depends_on:
-          - backend
+version: '3.8'
+
+services:
+  backend:
+    # ✅ ADD THIS LINE (Replace YOUR_DOCKER_ID):
+    image: superkk11/quantum-backend:latest
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    # ✅ ADD THIS LINE (Replace YOUR_DOCKER_ID):
+    image: superkk11/quantum-frontend:latest
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
     ```
 
 2.  **Run the application:**
