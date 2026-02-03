@@ -42,13 +42,13 @@ cd hospital-management-qkd
 Prerequisite: Install Anaconda or Miniconda.
 cd backend
 # Create the environment
-conda create --name hospital-sys python=3.9
+conda create --name qkd_env python=3.10 -y 
 # Activate it
-conda activate hospital-sys
+conda activate qkd_env
 # Install dependencies
 pip install fastapi uvicorn pymongo python-dotenv pydantic bcrypt pyjwt cryptography
 # Run the Server
-python -m uvicorn app.main:app --reload
+uvicorn app.main:app --reload
 ```
 ### 3. Frontend Setup (React)
 ```bash
