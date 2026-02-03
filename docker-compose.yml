@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # Service 1: The Python Backend
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env  # Reads your MongoDB URL from your local .env file
+
+  # Service 2: The React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      # This ensures the frontend knows where to look for the backend
+      args:
+        - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:80" # Maps localhost:5173 to container port 80
+    depends_on:
+      - backend
